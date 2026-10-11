@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notion Personal Hub Clock Widget</title>
+  <!-- Google Fonts: Inter & Plus Jakarta Sans & Prompt for Thai -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --card-bg: #ffffff;
+      --card-border: rgba(0, 0, 0, 0.08);
+      --text-primary: #2f343b;
+      --text-secondary: #787774;
+      --text-muted: #9b9a97;
+      --accent: #2383e2;
+      --progress-bg: rgba(0, 0, 0, 0.06);
+      --progress-fill: #2f343b;
+      --font-clock: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-body: 'Plus Jakarta Sans', 'Prompt', sans-serif;
+      --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+      --border-radius: 16px;
+    }
+
+    /* Theme Presets */
+    body[data-theme="notion-dark"] {
+      --bg-color: #191919;
+      --card-bg: #202020;
+      --card-border: rgba(255, 255, 255, 0.09);
+      --text-primary: #e6e6e6;
+      --text-secondary: #9b9a97;
+      --text-muted: #6e6d6a;
+      --accent: #529cca;
+      --progress-bg: rgba(255, 255, 255, 0.08);
+      --progress-fill: #e6e6e6;
+      --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+    }
+
+    body[data-theme="transparent"] {
+      --bg-color: transparent;
+      --card-bg: transparent;
+      --card-border: transparent;
+      --text-primary: #37352f;
+      --text-secondary: #787774;
+      --text-muted: #9b9a97;
+      --accent: #2383e2;
+      --progress-bg: rgba(0, 0, 0, 0.06);
+      --progress-fill: #37352f;
+      --shadow: none;
+    }
+
+    body[data-theme="transparent-dark"] {
+      --bg-color: transparent;
+      --card-bg: transparent;
+      --card-border: transparent;
+      --text-primary: #e6e6e6;
+      --text-secondary: #9b9a97;
+      --text-muted: #6e6d6a;
+      --accent: #529cca;
+      --progress-bg: rgba(255, 255, 255, 0.08);
+      --progress-fill: #e6e6e6;
+      --shadow: none;
+    }
+
+    body[data-theme="warm-latte"] {
+      --bg-color: #faf7f2;
+      --card-bg: #ffffff;
+      --card-border: rgba(180, 160, 140, 0.15);
+      --text-primary: #4a3e36;
+      --text-secondary: #8c7d70;
+      --text-muted: #bdaea1;
+      --accent: #c48b5f;
+      --progress-bg: rgba(180, 160, 140, 0.12);
+      --progress-fill: #9a6d48;
+      --shadow: 0 4px 20px -2px rgba(138, 115, 93, 0.08);
+    }
+
+    body[data-theme="sage-matcha"] {
+      --bg-color: #f3f6f3;
+      --card-bg: #ffffff;
+      --card-border: rgba(120, 150, 125, 0.18);
+      --text-primary: #2d3b2f;
+      --text-secondary: #657a68;
+      --text-muted: #9bb09e;
+      --accent: #588157;
+      --progress-bg: rgba(120, 150, 125, 0.12);
+      --progress-fill: #588157;
+      --shadow: 0 4px 20px -2px rgba(78, 110, 83, 0.06);
+    }
+
+    body[data-theme="midnight-blue"] {
+      --bg-color: #0b1120;
+      --card-bg: #131d33;
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent: #38bdf8;
+      --progress-bg: rgba(255, 255, 255, 0.08);
+      --progress-fill: #38bdf8;
+      --shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Widget Card */
+    .widget-container {
+      position: relative;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: 24px 28px;
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+    }
+
+    /* Top Greeting Bar */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .greeting-text {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: -0.01em;
+    }
+
+    .greeting-icon {
+      font-size: 15px;
+    }
+
+    /* Settings Gear Button */
+    .settings-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      padding: 4px 6px;
+      border-radius: 6px;
+      opacity: 0.35;
+      transition: opacity 0.2s, background 0.2s, transform 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .settings-btn:hover {
+      opacity: 1;
+      background: var(--progress-bg);
+      color: var(--text-primary);
+      transform: rotate(45deg);
+    }
+
+    /* Main Clock Display */
+    .clock-display {
+      font-family: var(--font-clock);
+      font-size: 58px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+      color: var(--text-primary);
+      margin: 4px 0 10px 0;
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .time-digits {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .seconds-digits {
+      font-size: 26px;
+      font-weight: 500;
+      opacity: 0.55;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .ampm-badge {
+      font-size: 15px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-left: 6px;
+      opacity: 0.65;
+      letter-spacing: 0.04em;
+    }
+
+    /* Date display */
+    .date-display {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      letter-spacing: -0.01em;
+      margin-bottom: 16px;
+    }
+
+    /* Day Progress Bar */
+    .progress-section {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--card-border);
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .progress-bar-track {
+      width: 100%;
+      height: 6px;
+      background: var(--progress-bg);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--progress-fill);
+      border-radius: 999px;
+      width: 0%;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Custom Quotes / Note */
+    .quote-display {
+      margin-top: 10px;
+      font-size: 12px;
+      font-style: italic;
+      color: var(--text-muted);
+    }
+
+    /* Settings Modal / Overlay */
+    .settings-panel {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 20px;
+      z-index: 50;
+      overflow-y: auto;
+      text-align: left;
+      animation: fadeIn 0.15s ease-out;
+    }
+
+    .settings-panel.active {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .settings-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .settings-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .close-btn {
+      background: var(--progress-bg);
+      border: none;
+      color: var(--text-primary);
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .setting-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .setting-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .theme-pill {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      background: var(--progress-bg);
+      color: var(--text-primary);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+
+    .theme-pill.active {
+      background: var(--text-primary);
+      color: var(--card-bg);
+      border-color: var(--text-primary);
+    }
+
+    .toggles-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .toggle-chip {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      background: var(--progress-bg);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .toggle-chip.active {
+      background: var(--progress-fill);
+      color: var(--card-bg);
+      border-color: var(--progress-fill);
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      background: var(--progress-bg);
+      color: var(--text-primary);
+      font-size: 12px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .input-field:focus {
+      border-color: var(--accent);
+    }
+  </style>
+</head>
+<body data-theme="notion-light">
+
+  <div class="widget-container" id="widgetCard">
+    <!-- Top Greeting Bar -->
+    <div class="header-bar">
+      <div class="greeting-text">
+        <span class="greeting-icon" id="greetingIcon">✨</span>
+        <span id="greetingText">Good Day, Personal Hub</span>
+      </div>
+      <button class="settings-btn" id="openSettingsBtn" title="ตั้งค่า Widget">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Main Clock -->
+    <div class="clock-display">
+      <span class="time-digits" id="timeDigits">12:00</span>
+      <span class="seconds-digits" id="secondsDigits">:00</span>
+      <span class="ampm-badge" id="ampmBadge">PM</span>
+    </div>
+
+    <!-- Date Display -->
+    <div class="date-display" id="dateText">
+      วันจันทร์ที่ 12 ตุลาคม 2026
+    </div>
+
+    <!-- Day Progress Bar -->
+    <div class="progress-section" id="progressSection">
+      <div class="progress-header">
+        <span>Day Progress</span>
+        <span id="progressPercent">50%</span>
+      </div>
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progressBarFill"></div>
+      </div>
+    </div>
+
+    <!-- Custom Quote / Motivation -->
+    <div class="quote-display" id="quoteText">
+      "Focus on being productive instead of busy."
+    </div>
+
+    <!-- Settings Panel (Overlay) -->
+    <div class="settings-panel" id="settingsPanel">
+      <div class="settings-title-row">
+        <div class="settings-title">⚙️ ตั้งค่า Widget (Widget Settings)</div>
+        <button class="close-btn" id="closeSettingsBtn">✕</button>
+      </div>
+
+      <!-- Theme Selection -->
+      <div class="setting-group">
+        <div class="setting-label">ธีม (Theme)</div>
+        <div class="theme-grid">
+          <button class="theme-pill" data-theme="notion-light">Light</button>
+          <button class="theme-pill" data-theme="notion-dark">Dark</button>
+          <button class="theme-pill" data-theme="warm-latte">Warm Latte</button>
+          <button class="theme-pill" data-theme="sage-matcha">Sage Matcha</button>
+          <button class="theme-pill" data-theme="midnight-blue">Midnight</button>
+          <button class="theme-pill" data-theme="transparent">Transparent</button>
+        </div>
+      </div>
+
+      <!-- Display Toggles -->
+      <div class="setting-group">
+        <div class="setting-label">ตัวเลือกการแสดงผล</div>
+        <div class="toggles-row">
+          <button class="toggle-chip active" id="toggle24h">24-Hour</button>
+          <button class="toggle-chip active" id="toggleSeconds">แสดงวินาที</button>
+          <button class="toggle-chip active" id="toggleLang">ภาษาไทย (TH)</button>
+          <button class="toggle-chip active" id="toggleProgress">Day Progress</button>
+          <button class="toggle-chip active" id="toggleQuote">คำคม/โน้ต</button>
+        </div>
+      </div>
+
+      <!-- Custom Name & Quote -->
+      <div class="setting-group">
+        <div class="setting-label">ชื่อ / ข้อความทักทาย</div>
+        <input type="text" class="input-field" id="userNameInput" placeholder="เช่น Personal Hub หรือ ชื่อของคุณ" value="Personal Hub">
+      </div>
+
+      <div class="setting-group">
+        <div class="setting-label">ข้อความคำคม / โน้ตย่อ</div>
+        <input type="text" class="input-field" id="userQuoteInput" placeholder="ใส่คำคมหรือเป้าหมายประจำวัน..." value="Focus on being productive instead of busy.">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State with LocalStorage persistence
+    const state = {
+      theme: localStorage.getItem('nh_theme') || 'notion-light',
+      is24h: localStorage.getItem('nh_24h') === 'true' || false,
+      showSeconds: localStorage.getItem('nh_seconds') !== 'false',
+      lang: localStorage.getItem('nh_lang') || 'th',
+      showProgress: localStorage.getItem('nh_progress') !== 'false',
+      showQuote: localStorage.getItem('nh_quote') !== 'false',
+      userName: localStorage.getItem('nh_username') || 'Personal Hub',
+      userQuote: localStorage.getItem('nh_userquote') || 'Focus on being productive instead of busy.'
+    };
+
+    // DOM Elements
+    const body = document.body;
+    const timeDigits = document.getElementById('timeDigits');
+    const secondsDigits = document.getElementById('secondsDigits');
+    const ampmBadge = document.getElementById('ampmBadge');
+    const dateText = document.getElementById('dateText');
+    const greetingText = document.getElementById('greetingText');
+    const greetingIcon = document.getElementById('greetingIcon');
+    const progressSection = document.getElementById('progressSection');
+    const progressPercent = document.getElementById('progressPercent');
+    const progressBarFill = document.getElementById('progressBarFill');
+    const quoteText = document.getElementById('quoteText');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const openSettingsBtn = document.getElementById('openSettingsBtn');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+
+    // Control elements
+    const toggle24h = document.getElementById('toggle24h');
+    const toggleSeconds = document.getElementById('toggleSeconds');
+    const toggleLang = document.getElementById('toggleLang');
+    const toggleProgress = document.getElementById('toggleProgress');
+    const toggleQuote = document.getElementById('toggleQuote');
+    const userNameInput = document.getElementById('userNameInput');
+    const userQuoteInput = document.getElementById('userQuoteInput');
+
+    // Months & Days
+    const thaiDays = ['วันอาทิตย์', 'วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์', 'วันเสาร์'];
+    const thaiMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+    const engDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const engMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+    function applyState() {
+      // Apply theme
+      body.setAttribute('data-theme', state.theme);
+      document.querySelectorAll('.theme-pill').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.theme === state.theme);
+      });
+
+      // Toggles UI
+      toggle24h.classList.toggle('active', state.is24h);
+      toggle24h.textContent = state.is24h ? 'รูปแบบ: 24-Hour' : 'รูปแบบ: 12-Hour';
+
+      toggleSeconds.classList.toggle('active', state.showSeconds);
+      secondsDigits.style.display = state.showSeconds ? 'inline' : 'none';
+
+      toggleLang.classList.toggle('active', state.lang === 'th');
+      toggleLang.textContent = state.lang === 'th' ? 'ภาษา: ไทย (TH)' : 'Language: English';
+
+      toggleProgress.classList.toggle('active', state.showProgress);
+      progressSection.style.display = state.showProgress ? 'block' : 'none';
+
+      toggleQuote.classList.toggle('active', state.showQuote);
+      quoteText.style.display = state.showQuote ? 'block' : 'none';
+
+      userNameInput.value = state.userName;
+      userQuoteInput.value = state.userQuote;
+      quoteText.textContent = `"${state.userQuote}"`;
+
+      updateClock();
+    }
+
+    function saveState() {
+      localStorage.setItem('nh_theme', state.theme);
+      localStorage.setItem('nh_24h', state.is24h);
+      localStorage.setItem('nh_seconds', state.showSeconds);
+      localStorage.setItem('nh_lang', state.lang);
+      localStorage.setItem('nh_progress', state.showProgress);
+      localStorage.setItem('nh_quote', state.showQuote);
+      localStorage.setItem('nh_username', state.userName);
+      localStorage.setItem('nh_userquote', state.userQuote);
+    }
+
+    function updateClock() {
+      const now = new Date();
+      let hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+
+      // AM/PM calculation
+      let ampm = '';
+      if (!state.is24h) {
+        ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // 0 becomes 12
+      }
+      const hoursStr = state.is24h ? String(hours).padStart(2, '0') : String(hours);
+
+      timeDigits.textContent = `${hoursStr}:${minutes}`;
+      secondsDigits.textContent = `:${seconds}`;
+      ampmBadge.textContent = ampm;
+      ampmBadge.style.display = state.is24h ? 'none' : 'inline';
+
+      // Date string
+      const dayIdx = now.getDay();
+      const dateNum = now.getDate();
+      const monthIdx = now.getMonth();
+      const year = now.getFullYear();
+
+      if (state.lang === 'th') {
+        const thaiYear = year + 543;
+        dateText.textContent = `${thaiDays[dayIdx]}ที่ ${dateNum} ${thaiMonths[monthIdx]} ${thaiYear}`;
+      } else {
+        dateText.textContent = `${engDays[dayIdx]}, ${engMonths[monthIdx]} ${dateNum}, ${year}`;
+      }
+
+      // Dynamic Greeting based on current hour
+      const rawHour = now.getHours();
+      let greeting = '';
+      let icon = '☀️';
+
+      if (rawHour >= 5 && rawHour < 12) {
+        greeting = state.lang === 'th' ? `อรุณสวัสดิ์, ${state.userName}` : `Good morning, ${state.userName}`;
+        icon = '🌅';
+      } else if (rawHour >= 12 && rawHour < 17) {
+        greeting = state.lang === 'th' ? `สวัสดีตอนบ่าย, ${state.userName}` : `Good afternoon, ${state.userName}`;
+        icon = '☀️';
+      } else if (rawHour >= 17 && rawHour < 21) {
+        greeting = state.lang === 'th' ? `สวัสดีตอนเย็น, ${state.userName}` : `Good evening, ${state.userName}`;
+        icon = '🌇';
+      } else {
+        greeting = state.lang === 'th' ? `ราตรีสวัสดิ์, ${state.userName}` : `Good night, ${state.userName}`;
+        icon = '🌙';
+      }
+
+      greetingText.textContent = greeting;
+      greetingIcon.textContent = icon;
+
+      // Day Progress (%)
+      if (state.showProgress) {
+        const secondsToday = (rawHour * 3600) + (now.getMinutes() * 60) + now.getSeconds();
+        const percent = Math.min(100, Math.max(0, Math.floor((secondsToday / 86400) * 100)));
+        progressPercent.textContent = `${percent}%`;
+        progressBarFill.style.width = `${percent}%`;
+      }
+    }
+
+    // Event Listeners
+    openSettingsBtn.addEventListener('click', () => {
+      settingsPanel.classList.add('active');
+    });
+
+    closeSettingsBtn.addEventListener('click', () => {
+      settingsPanel.classList.remove('active');
+    });
+
+    // Theme selector
+    document.querySelectorAll('.theme-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.theme = btn.dataset.theme;
+        saveState();
+        applyState();
+      });
+    });
+
+    // Toggles
+    toggle24h.addEventListener('click', () => {
+      state.is24h = !state.is24h;
+      saveState();
+      applyState();
+    });
+
+    toggleSeconds.addEventListener('click', () => {
+      state.showSeconds = !state.showSeconds;
+      saveState();
+      applyState();
+    });
+
+    toggleLang.addEventListener('click', () => {
+      state.lang = state.lang === 'th' ? 'en' : 'th';
+      saveState();
+      applyState();
+    });
+
+    toggleProgress.addEventListener('click', () => {
+      state.showProgress = !state.showProgress;
+      saveState();
+      applyState();
+    });
+
+    toggleQuote.addEventListener('click', () => {
+      state.showQuote = !state.showQuote;
+      saveState();
+      applyState();
+    });
+
+    userNameInput.addEventListener('input', (e) => {
+      state.userName = e.target.value.trim() || 'Personal Hub';
+      saveState();
+      updateClock();
+    });
+
+    userQuoteInput.addEventListener('input', (e) => {
+      state.userQuote = e.target.value.trim() || '';
+      saveState();
+      quoteText.textContent = state.userQuote ? `"${state.userQuote}"` : '';
+    });
+
+    // Initial setup
+    applyState();
+    setInterval(updateClock, 1000);
+  </script>
+</body>
+</html>
